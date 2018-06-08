@@ -39,7 +39,7 @@ impl Vaptcha{
         let q1=query.clone();
         let signature : String = hmacsha1(key, query);
         if !self._isDown{
-            let challenge = http_get(format!("{}?{}&signature={}", url.as_str(), q1.as_str(), signature.as_str()).as_str());
+            let challenge = http_get(format!("{}?{}&signature={}", url, q1, signature).as_str());
             if challenge == vaptchaconfig::request_usedup {
                 self._lastCheckDownTime = now;
                 self._isDown=true;
@@ -54,16 +54,16 @@ impl Vaptcha{
                 }
                 return get_downtime_captcha(self);
             } 
-            return format!("{}{}{}", "{",format!("\"id\":\"{}\",\"challenge\":\"{}\"", self._id, challenge.as_str()) , "}");
+            return format!("{}{}{}", "{",format!("\"id\":\"{}\",\"challenge\":\"{}\"", self._id, challenge) , "}");
         } 
         if now - self._lastCheckDownTime > vaptchaconfig::down_check_time{
                 self._lastCheckDownTime = now;
-                let challenge = http_get(format!("{}?{}&signature={}", url.as_str(), q1.as_str(), signature.as_str()).as_str());
+                let challenge = http_get(format!("{}?{}&signature={}", url, q1, signature).as_str());
                 if !challenge.is_empty() && challenge != vaptchaconfig::request_usedup{
                     self._isDown = false;
                     self._passedSignatures=vec![];
  
-                    return format!("{}{}{}", "{",format!("\"id\":\"{}\",\"challenge\":\"{}\"", self._id.as_str(), challenge.as_str()).as_str() , "}"); 
+                    return format!("{}{}{}", "{",format!("\"id\":\"{}\",\"challenge\":\"{}\"", self._id, challenge) , "}"); 
                 } 
         }    
         get_downtime_captcha(self)
@@ -208,15 +208,15 @@ impl Vaptcha{
     }
     fn normal_validate(_id : String, _key : String, challenge : &str, token : String, sceneid : String) -> bool{
          
-        if token.is_empty() || challenge.is_empty() || token != md5ecode(format!("{}vaptcha{}", _key.as_str(), challenge)){
+        if token.is_empty() || challenge.is_empty() || token != md5ecode(format!("{}vaptcha{}", _key, challenge)){
             return false;
         }
         let url = format!("{}{}", vaptchaconfig::api_url, vaptchaconfig::validate_url);
         let query : String = format!("id={}&scene={}&token={}&time={}&version={}&sdklang={}"
-                    , _id.as_str(), sceneid.as_str(), token, get_unixtime_milliseconds(), vaptchaconfig::version, vaptchaconfig::sdklang);
+                    , _id, sceneid, token, get_unixtime_milliseconds(), vaptchaconfig::version, vaptchaconfig::sdklang);
         let query1 = query.clone();
         let signature : String = hmacsha1(_key, query1);
-        http_post(&url, format!("{}&signature={}", query, signature).as_str()) == "100".to_string()
+        http_post(&url, format!("{}&signature={}", query, signature)) == "100".to_string()
     }
 
     fn downtime_validate(v : &mut Vaptcha, token : String) -> bool{
